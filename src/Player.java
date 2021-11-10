@@ -1,15 +1,21 @@
+import ui.AddSongWindow;
 import ui.PlayerWindow;
 
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
+import java.util.ArrayList;
 
 public class Player {
+    ArrayList<String[]> queueList;
+    PlayerWindow window;
+
+    int lastId;
+
     public Player() {
+        lastId = 0;
+
         ActionListener buttonListenerPlayNow = e -> { };
         ActionListener buttonListenerRemove = e -> { };
-        ActionListener buttonListenerAddSong = e -> { };
+        ActionListener buttonListenerAddSong = e -> { addSong(); };
         ActionListener buttonListenerStop = e -> { };
         ActionListener buttonListenerNext = e -> { };
         ActionListener buttonListenerPrevious = e -> { };
@@ -56,10 +62,46 @@ public class Player {
 
         String windowTitle = "Music Player";
 
-        String[][] queueArray = new String[6][0];
+        this.queueList = new ArrayList();
 
-        PlayerWindow window = new PlayerWindow(buttonListenerPlayNow, buttonListenerRemove, buttonListenerAddSong, buttonListenerPlayNow, buttonListenerStop, buttonListenerNext, buttonListenerPrevious, buttonListenerShuffle, buttonListenerRepeat, scrubberListenerClick, scrubberListenerMotion, windowTitle, queueArray);
+        this.window = new PlayerWindow(buttonListenerPlayNow, buttonListenerRemove, buttonListenerAddSong, buttonListenerPlayNow, buttonListenerStop, buttonListenerNext, buttonListenerPrevious, buttonListenerShuffle, buttonListenerRepeat, scrubberListenerClick, scrubberListenerMotion, windowTitle, this.queueList.toArray(new String[0][0]));
 
+    }
+
+    public class GetSong{
+        AddSongWindow addSongWindow;
+
+        public GetSong(){
+            this.addSongWindow = null;
+        }
+
+        public void setWindow(AddSongWindow addSongWindow){
+            this.addSongWindow = addSongWindow;
+        }
+
+        public String[] run(){
+            String[] song = this.addSongWindow.getSong();
+
+            return song;
+        }
+    }
+
+    private void addSong(){
+        int id = this.lastId + 1;
+        this.lastId = id;
+        GetSong getSong = new GetSong();
+        ActionListener buttonListenerAddSongOK = e -> {saveSong(getSong); };
+
+        AddSongWindow addSongWindow = new AddSongWindow(Integer.toString(id), buttonListenerAddSongOK, this.window.getAddSongWindowListener());
+
+        getSong.setWindow(addSongWindow);
+    }
+
+    private void saveSong(GetSong getSong){
+        String[] song = getSong.run();
+
+        this.queueList.add(song);
+        this.window.updateQueueList(this.queueList.toArray(new String[0][0]));
     }
 }
 
