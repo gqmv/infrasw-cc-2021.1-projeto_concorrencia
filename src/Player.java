@@ -2,6 +2,7 @@ import ui.AddSongWindow;
 import ui.PlayerWindow;
 
 import java.awt.event.*;
+import java.net.BindException;
 import java.util.ArrayList;
 
 public class Player {
@@ -14,7 +15,7 @@ public class Player {
         lastId = 0;
 
         ActionListener buttonListenerPlayNow = e -> { };
-        ActionListener buttonListenerRemove = e -> { };
+        ActionListener buttonListenerRemove = e -> { removeSong(); };
         ActionListener buttonListenerAddSong = e -> { addSong(); };
         ActionListener buttonListenerStop = e -> { };
         ActionListener buttonListenerNext = e -> { };
@@ -103,5 +104,35 @@ public class Player {
         this.queueList.add(song);
         this.window.updateQueueList(this.queueList.toArray(new String[0][0]));
     }
-}
 
+    private void removeSong(){
+        int songId = this.window.getSelectedSongID();
+        int idSong = binarySearch(this.queueList, songId);
+        this.queueList.remove(idSong);
+        this.window.updateQueueList(this.queueList.toArray(new String[0][0]));
+
+    }
+
+    private int binarySearch(ArrayList<String[]> list, int id){
+        int low = 0;
+        int high = list.size() - 1;
+        int mid = 0;
+
+        while(low <= high){
+            mid = (low + high) / 2;
+
+            if(list.get(mid)[6].equals(Integer.toString(id))){
+                return mid;
+            }
+
+            if(Integer.parseInt(list.get(mid)[6]) < id){
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+
+        return -1;
+    }
+        
+}
