@@ -10,13 +10,19 @@ public class Player {
     PlayerWindow window;
 
     int lastId;
-
+    int currentlyPlayingIndex;
+    boolean isPlaying;
+    int currentTime;
+    
     public Player() {
         lastId = 0;
+        currentlyPlayingIndex = 0;
+        currentTime = 0;
 
-        ActionListener buttonListenerPlayNow = e -> { };
+        ActionListener buttonListenerPlayNow = e -> { playNow(); };
         ActionListener buttonListenerRemove = e -> { removeSong(); };
         ActionListener buttonListenerAddSong = e -> { addSong(); };
+        ActionListener buttonListenerPlayPause = e -> { playPause(); };
         ActionListener buttonListenerStop = e -> { };
         ActionListener buttonListenerNext = e -> { };
         ActionListener buttonListenerPrevious = e -> { };
@@ -65,7 +71,7 @@ public class Player {
 
         this.queueList = new ArrayList();
 
-        this.window = new PlayerWindow(buttonListenerPlayNow, buttonListenerRemove, buttonListenerAddSong, buttonListenerPlayNow, buttonListenerStop, buttonListenerNext, buttonListenerPrevious, buttonListenerShuffle, buttonListenerRepeat, scrubberListenerClick, scrubberListenerMotion, windowTitle, this.queueList.toArray(new String[0][0]));
+        this.window = new PlayerWindow(buttonListenerPlayNow, buttonListenerRemove, buttonListenerAddSong, buttonListenerPlayPause, buttonListenerStop, buttonListenerNext, buttonListenerPrevious, buttonListenerShuffle, buttonListenerRepeat, scrubberListenerClick, scrubberListenerMotion, windowTitle, this.queueList.toArray(new String[0][0]));
 
     }
 
@@ -134,5 +140,23 @@ public class Player {
 
         return -1;
     }
-        
+
+    private void playNow(){
+        int songIndex = binarySearch(this.queueList, this.window.getSelectedSongID());
+        this.currentlyPlayingIndex = songIndex;
+        String[] song = this.queueList.get(songIndex);
+
+        this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
+        this.window.enableScrubberArea();
+    }
+
+    private void playPause(){
+        if (this.isPlaying){
+            this.isPlaying = false;
+        } else {
+            this.isPlaying = true;
+        }
+
+        this.window.updatePlayPauseButton(this.isPlaying);
+    }    
 }
