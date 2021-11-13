@@ -245,3 +245,4 @@ public class PlayerWindow extends Thread {
         return queuePanel.getActionListener();
     }
 }
+
