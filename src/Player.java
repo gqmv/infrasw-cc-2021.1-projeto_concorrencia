@@ -80,7 +80,7 @@ public class Player {
 
     }
 
-    public Condition getPlayPresseCondition(){
+    public Condition getPlayPressedCondition(){
         return playPressedCondition;
     }
 
