@@ -4,15 +4,20 @@ import ui.PlayerWindow;
 import java.awt.event.*;
 import java.net.BindException;
 import java.util.ArrayList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Player {
     ArrayList<String[]> queueList;
-    PlayerWindow window;
+    public PlayerWindow window;
 
     int lastId;
     int currentlyPlayingIndex;
     boolean isPlaying;
     int currentTime;
+    public final Lock lock = new ReentrantLock();
+    private final Condition playPressedCondition = lock.newCondition();
     
     public Player() {
         lastId = 0;
@@ -74,6 +79,11 @@ public class Player {
         this.window = new PlayerWindow(buttonListenerPlayNow, buttonListenerRemove, buttonListenerAddSong, buttonListenerPlayPause, buttonListenerStop, buttonListenerNext, buttonListenerPrevious, buttonListenerShuffle, buttonListenerRepeat, scrubberListenerClick, scrubberListenerMotion, windowTitle, this.queueList.toArray(new String[0][0]));
 
     }
+
+    public Condition getPlayPresseCondition(){
+        return playPressedCondition;
+    }
+
 
     public class GetSong{
         AddSongWindow addSongWindow;
@@ -141,22 +151,47 @@ public class Player {
         return -1;
     }
 
+    public String[] getCurrentlyPlayingSong(){
+        return this.queueList.get(this.currentlyPlayingIndex);
+    }
+
     private void playNow(){
         int songIndex = binarySearch(this.queueList, this.window.getSelectedSongID());
         this.currentlyPlayingIndex = songIndex;
         String[] song = this.queueList.get(songIndex);
-
+        lock.lock();
         this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
         this.window.enableScrubberArea();
+        // Activate the play music button 
+        this.isPlaying = true;
+        this.window.updatePlayPauseButton(this.isPlaying);
+        this.playPressedCondition.signalAll();
+        lock.unlock();
     }
 
+
+    public void updateTime(){
+        this.currentTime += 1;
+        int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
+
+        if (finalTime >= this.currentTime){
+            this.window.updateMiniplayer(true, true, false, this.currentTime, finalTime, this.currentlyPlayingIndex, this.queueList.size());
+        } else {
+            this.window.resetMiniPlayer();
+            this.isPlaying = false;
+            this.currentTime = 0;
+        }
+    }
     private void playPause(){
+        this.lock.lock();
         if (this.isPlaying){
             this.isPlaying = false;
         } else {
             this.isPlaying = true;
+            this.playPressedCondition.signalAll();
         }
 
         this.window.updatePlayPauseButton(this.isPlaying);
+        this.lock.unlock();
     }    
 }
