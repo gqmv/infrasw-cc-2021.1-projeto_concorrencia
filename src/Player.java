@@ -29,24 +29,34 @@ public class Player {
         ActionListener buttonListenerAddSong = e -> { addSong(); };
         ActionListener buttonListenerPlayPause = e -> { playPause(); };
         ActionListener buttonListenerStop = e -> { };
-        ActionListener buttonListenerNext = e -> { };
-        ActionListener buttonListenerPrevious = e -> { };
+        ActionListener buttonListenerNext = e -> { nextMusic(); };
+        ActionListener buttonListenerPrevious = e -> { previousMusic(); };
         ActionListener buttonListenerShuffle = e -> { };
         ActionListener buttonListenerRepeat = e -> { };
         MouseListener scrubberListenerClick = new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
+                lock.lock();
+                isPlaying = false;
 
+                currentTime = window.getScrubberValue();
+                int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
+
+                window.updateMiniplayer(true, true, false, currentTime, finalTime, currentlyPlayingIndex, queueList.size());
+
+                lock.unlock();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-
+                lock.lock();
+                isPlaying = true;
+                playPressedCondition.signalAll();
+                lock.unlock();
             }
 
             @Override
@@ -63,7 +73,12 @@ public class Player {
         MouseMotionListener scrubberListenerMotion = new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
+                lock.lock();
+                currentTime = window.getScrubberValue();
+                int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
 
+                window.updateMiniplayer(true, true, false, currentTime, finalTime, currentlyPlayingIndex, queueList.size());
+                lock.unlock();
             }
 
             @Override
@@ -159,16 +174,48 @@ public class Player {
         int songIndex = binarySearch(this.queueList, this.window.getSelectedSongID());
         this.currentlyPlayingIndex = songIndex;
         String[] song = this.queueList.get(songIndex);
-        lock.lock();
+        this.lock.lock();
+        this.currentTime = 0;
         this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
         this.window.enableScrubberArea();
         // Activate the play music button 
         this.isPlaying = true;
         this.window.updatePlayPauseButton(this.isPlaying);
         this.playPressedCondition.signalAll();
-        lock.unlock();
+        this.lock.unlock();
     }
 
+    private void nextMusic(){
+        if(this.currentlyPlayingIndex < this.queueList.size() - 1){
+            this.currentlyPlayingIndex++;
+            String[] song = this.queueList.get(this.currentlyPlayingIndex);
+            this.lock.lock();
+            this.currentTime = -1;
+            this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
+            this.window.enableScrubberArea();
+            // Activate the play music button 
+            this.isPlaying = true;
+            this.window.updatePlayPauseButton(this.isPlaying);
+            this.playPressedCondition.signalAll();
+            this.lock.unlock();
+    } 
+}
+
+    private void previousMusic(){
+        if(this.currentlyPlayingIndex > 0){
+            this.currentlyPlayingIndex--;
+            String[] song = this.queueList.get(this.currentlyPlayingIndex);
+            this.lock.lock();
+            this.currentTime = -1;
+            this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
+            this.window.enableScrubberArea();
+            // Activate the play music button 
+            this.isPlaying = true;
+            this.window.updatePlayPauseButton(this.isPlaying);
+            this.playPressedCondition.signalAll();
+            this.lock.unlock();
+        }
+    } 
 
     public void updateTime(){
         this.currentTime += 1;
@@ -193,5 +240,6 @@ public class Player {
 
         this.window.updatePlayPauseButton(this.isPlaying);
         this.lock.unlock();
-    }    
+    }
 }
+    
