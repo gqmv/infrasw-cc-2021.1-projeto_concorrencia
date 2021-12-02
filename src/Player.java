@@ -175,7 +175,7 @@ public class Player {
         this.currentlyPlayingIndex = songIndex;
         String[] song = this.queueList.get(songIndex);
         this.lock.lock();
-        this.currentTime = 0;
+        this.currentTime = -1;
         this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
         this.window.enableScrubberArea();
         // Activate the play music button 
