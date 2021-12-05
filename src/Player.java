@@ -41,21 +41,26 @@ public class Player {
             @Override
             public void mousePressed(MouseEvent e) {
                 lock.lock();
-                isPlaying = false;
+                try{
+                    isPlaying = false;
 
-                currentTime = window.getScrubberValue();
-                int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
+                    currentTime = window.getScrubberValue();
+                    int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
 
-                window.updateMiniplayer(true, true, false, currentTime, finalTime, currentlyPlayingIndex, queueList.size());
-
+                    window.updateMiniplayer(true, true, false, currentTime, finalTime, currentlyPlayingIndex, queueList.size());
+                }
+                catch(Throwable t){}
                 lock.unlock();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
                 lock.lock();
-                isPlaying = true;
-                playPressedCondition.signalAll();
+                try{
+                    isPlaying = true;
+                    playPressedCondition.signalAll();
+                }
+                catch(Throwable t){}
                 lock.unlock();
             }
 
@@ -74,10 +79,13 @@ public class Player {
             @Override
             public void mouseDragged(MouseEvent e) {
                 lock.lock();
-                currentTime = window.getScrubberValue();
-                int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
+                try{
+                    currentTime = window.getScrubberValue();
+                    int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
 
-                window.updateMiniplayer(true, true, false, currentTime, finalTime, currentlyPlayingIndex, queueList.size());
+                    window.updateMiniplayer(true, true, false, currentTime, finalTime, currentlyPlayingIndex, queueList.size());
+                }
+                catch(Throwable t){}
                 lock.unlock();
             }
 
@@ -141,6 +149,10 @@ public class Player {
         int idSong = binarySearch(this.queueList, songId);
         this.queueList.remove(idSong);
         this.window.updateQueueList(this.queueList.toArray(new String[0][0]));
+        if (currentlyPlayingIndex == idSong){
+            this.isPlaying = false;
+            this.window.resetMiniPlayer();
+        }
 
     }
 
@@ -175,13 +187,16 @@ public class Player {
         this.currentlyPlayingIndex = songIndex;
         String[] song = this.queueList.get(songIndex);
         this.lock.lock();
-        this.currentTime = -1;
-        this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
-        this.window.enableScrubberArea();
-        // Activate the play music button 
-        this.isPlaying = true;
-        this.window.updatePlayPauseButton(this.isPlaying);
-        this.playPressedCondition.signalAll();
+        try{
+            this.currentTime = -1;
+            this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
+            this.window.enableScrubberArea();
+            // Activate the play music button 
+            this.isPlaying = true;
+            this.window.updatePlayPauseButton(this.isPlaying);
+            this.playPressedCondition.signalAll();
+        }
+        catch(Throwable t){}
         this.lock.unlock();
     }
 
@@ -190,13 +205,15 @@ public class Player {
             this.currentlyPlayingIndex++;
             String[] song = this.queueList.get(this.currentlyPlayingIndex);
             this.lock.lock();
-            this.currentTime = -1;
-            this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
-            this.window.enableScrubberArea();
-            // Activate the play music button 
-            this.isPlaying = true;
-            this.window.updatePlayPauseButton(this.isPlaying);
-            this.playPressedCondition.signalAll();
+            try{
+                this.currentTime = -1;
+                this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
+                this.window.enableScrubberArea();
+                // Activate the play music button 
+                this.isPlaying = true;
+                this.window.updatePlayPauseButton(this.isPlaying);
+                this.playPressedCondition.signalAll();}
+            catch(Throwable t){}
             this.lock.unlock();
     } 
 }
@@ -206,13 +223,16 @@ public class Player {
             this.currentlyPlayingIndex--;
             String[] song = this.queueList.get(this.currentlyPlayingIndex);
             this.lock.lock();
-            this.currentTime = -1;
-            this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
-            this.window.enableScrubberArea();
-            // Activate the play music button 
-            this.isPlaying = true;
-            this.window.updatePlayPauseButton(this.isPlaying);
-            this.playPressedCondition.signalAll();
+            try{
+                this.currentTime = -1;
+                this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
+                this.window.enableScrubberArea();
+                // Activate the play music button 
+                this.isPlaying = true;
+                this.window.updatePlayPauseButton(this.isPlaying);
+                this.playPressedCondition.signalAll();
+            }
+            catch(Throwable t){}
             this.lock.unlock();
         }
     } 
@@ -231,14 +251,16 @@ public class Player {
     }
     private void playPause(){
         this.lock.lock();
-        if (this.isPlaying){
-            this.isPlaying = false;
-        } else {
-            this.isPlaying = true;
-            this.playPressedCondition.signalAll();
+        try{
+            if (this.isPlaying){
+                this.isPlaying = false;
+            } else {
+                this.isPlaying = true;
+                this.playPressedCondition.signalAll();
+            }
+            this.window.updatePlayPauseButton(this.isPlaying);
         }
-
-        this.window.updatePlayPauseButton(this.isPlaying);
+        catch(Throwable t){}
         this.lock.unlock();
     }
 }
