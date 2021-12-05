@@ -17,6 +17,7 @@ public class Player {
     boolean isPlaying;
     int currentTime;
     public final Lock lock = new ReentrantLock();
+    Counter counter;
     private final Condition playPressedCondition = lock.newCondition();
     
     public Player() {
@@ -182,58 +183,46 @@ public class Player {
         return this.queueList.get(this.currentlyPlayingIndex);
     }
 
-    private void playNow(){
-        int songIndex = binarySearch(this.queueList, this.window.getSelectedSongID());
+    private void play(int songIndex){
         this.currentlyPlayingIndex = songIndex;
         String[] song = this.queueList.get(songIndex);
         this.lock.lock();
         try{
-            this.currentTime = -1;
+            if (this.isPlaying){
+            this.counter.requestStop();
+            }
+
+            this.currentTime = 0;
             this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
             this.window.enableScrubberArea();
             // Activate the play music button 
             this.isPlaying = true;
             this.window.updatePlayPauseButton(this.isPlaying);
-            this.playPressedCondition.signalAll();
+            this.window.updateMiniplayer(true, true, false, 0, Integer.parseInt(song[5]), this.currentlyPlayingIndex, this.queueList.size());
         }
         catch(Throwable t){}
         this.lock.unlock();
+
+        this.counter = new Counter(playPressedCondition, this);
+        this.counter.start();
+    }
+
+    private void playNow(){
+        int songIndex = binarySearch(this.queueList, this.window.getSelectedSongID());
+        play(songIndex);
     }
 
     private void nextMusic(){
         if(this.currentlyPlayingIndex < this.queueList.size() - 1){
             this.currentlyPlayingIndex++;
-            String[] song = this.queueList.get(this.currentlyPlayingIndex);
-            this.lock.lock();
-            try{
-                this.currentTime = -1;
-                this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
-                this.window.enableScrubberArea();
-                // Activate the play music button 
-                this.isPlaying = true;
-                this.window.updatePlayPauseButton(this.isPlaying);
-                this.playPressedCondition.signalAll();}
-            catch(Throwable t){}
-            this.lock.unlock();
+            play(this.currentlyPlayingIndex);
     } 
 }
 
     private void previousMusic(){
         if(this.currentlyPlayingIndex > 0){
             this.currentlyPlayingIndex--;
-            String[] song = this.queueList.get(this.currentlyPlayingIndex);
-            this.lock.lock();
-            try{
-                this.currentTime = -1;
-                this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
-                this.window.enableScrubberArea();
-                // Activate the play music button 
-                this.isPlaying = true;
-                this.window.updatePlayPauseButton(this.isPlaying);
-                this.playPressedCondition.signalAll();
-            }
-            catch(Throwable t){}
-            this.lock.unlock();
+            play(this.currentlyPlayingIndex);
         }
     } 
 
@@ -247,6 +236,7 @@ public class Player {
             this.window.resetMiniPlayer();
             this.isPlaying = false;
             this.currentTime = 0;
+            this.counter.requestStop();;
         }
     }
     private void playPause(){
