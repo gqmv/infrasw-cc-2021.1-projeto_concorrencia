@@ -1,3 +1,4 @@
+import com.formdev.flatlaf.icons.FlatSearchIcon;
 import ui.AddSongWindow;
 import ui.PlayerWindow;
 
@@ -17,7 +18,8 @@ public class Player {
     int currentlyPlayingIndex;
     boolean isPlaying;
     int currentTime;
-    String mode = "standard";
+    boolean isRepeat = false;
+    boolean isShuffle = false;
     public final Lock lock = new ReentrantLock();
     Counter counter;
     private final Condition playPressedCondition = lock.newCondition();
@@ -67,7 +69,6 @@ public class Player {
                     currentTime = window.getScrubberValue();
                     int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
 
-                    boolean isRepeat = mode == "repeat";
                     window.updateMiniplayer(true, true, isRepeat, currentTime, finalTime, currentlyPlayingIndex,
                             queueList.size());
                 } catch (Throwable t) {
@@ -104,8 +105,7 @@ public class Player {
                 try {
                     currentTime = window.getScrubberValue();
                     int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
-                    
-                    boolean isRepeat = mode == "repeat";
+
                     window.updateMiniplayer(true, true, isRepeat, currentTime, finalTime, currentlyPlayingIndex,
                             queueList.size());
                 } catch (Throwable t) {
@@ -226,8 +226,8 @@ public class Player {
             // Activate the play music button
             this.isPlaying = true;
             this.window.updatePlayPauseButton(this.isPlaying);
-            boolean isRepeat = this.mode == "repeat";
-            this.window.updateMiniplayer(true, true, isRepeat, 0, Integer.parseInt(song[5]), this.currentlyPlayingIndex,
+
+            this.window.updateMiniplayer(true, true, this.isRepeat, 0, Integer.parseInt(song[5]), this.currentlyPlayingIndex,
                     this.queueList.size());
         } catch (Throwable t) {
         }
@@ -243,7 +243,12 @@ public class Player {
     }
 
     private void nextMusic() {
-        if (this.currentlyPlayingIndex < this.queueList.size() - 1) {
+        if(this.isShuffle) {
+            Random rand = new Random();
+            int randomIndex = rand.nextInt(this.queueList.size());
+            play(randomIndex);
+        }
+        else if (this.currentlyPlayingIndex < this.queueList.size() - 1) {
             this.currentlyPlayingIndex++;
             play(this.currentlyPlayingIndex);
         }
@@ -251,8 +256,10 @@ public class Player {
 
     private void previousMusic() {
         if (this.currentlyPlayingIndex > 0) {
+
             this.currentlyPlayingIndex--;
             play(this.currentlyPlayingIndex);
+
         }
     }
 
@@ -261,24 +268,22 @@ public class Player {
         int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
 
         if (finalTime >= this.currentTime) {
-            boolean isRepeat = this.mode == "repeat";
-            this.window.updateMiniplayer(true, true, isRepeat, this.currentTime, finalTime, this.currentlyPlayingIndex,
+            this.window.updateMiniplayer(true, true, this.isRepeat, this.currentTime, finalTime, this.currentlyPlayingIndex,
                     this.queueList.size());
         } else {
             this.counter.requestStop();
             this.currentTime = 0;
-            
-            if (this.mode == "standard"){
-                nextMusic();
+
+            try {
+                this.lock.lock();
+                if (this.isRepeat) {
+                    play(this.currentlyPlayingIndex);
+                } else {
+                    nextMusic();
+                }
             }
-            else if (this.mode == "repeat"){
-                play(this.currentlyPlayingIndex);
-            }
-            else if (this.mode == "shuffle"){
-                Random rand = new Random();
-                int randomIndex = rand.nextInt(this.queueList.size());
-                play(randomIndex);
-            }            
+            catch (Throwable t){}
+            this.lock.unlock();
         }
     }
 
@@ -298,20 +303,10 @@ public class Player {
     }
 
     private void shuffle(){
-        if (this.mode == "standard" | this.mode == "repeat"){
-            this.mode = "shuffle";
-        }
-        else if (this.mode == "shuffle"){
-            this.mode = "standard";
-        }
+        this.isShuffle = !this.isShuffle;
     }
 
     private void repeat(){
-        if (this.mode == "standard" | this.mode == "shuffle"){
-            this.mode = "repeat";
-        }
-        else if (this.mode == "repeat"){
-            this.mode = "standard";
-        }
+        this.isRepeat = !this.isRepeat;
     }
 }
