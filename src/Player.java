@@ -67,7 +67,8 @@ public class Player {
                     currentTime = window.getScrubberValue();
                     int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
 
-                    window.updateMiniplayer(true, true, false, currentTime, finalTime, currentlyPlayingIndex,
+                    boolean isRepeat = mode == "repeat";
+                    window.updateMiniplayer(true, true, isRepeat, currentTime, finalTime, currentlyPlayingIndex,
                             queueList.size());
                 } catch (Throwable t) {
                 }
@@ -103,8 +104,9 @@ public class Player {
                 try {
                     currentTime = window.getScrubberValue();
                     int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
-
-                    window.updateMiniplayer(true, true, false, currentTime, finalTime, currentlyPlayingIndex,
+                    
+                    boolean isRepeat = mode == "repeat";
+                    window.updateMiniplayer(true, true, isRepeat, currentTime, finalTime, currentlyPlayingIndex,
                             queueList.size());
                 } catch (Throwable t) {
                 }
@@ -224,7 +226,8 @@ public class Player {
             // Activate the play music button
             this.isPlaying = true;
             this.window.updatePlayPauseButton(this.isPlaying);
-            this.window.updateMiniplayer(true, true, false, 0, Integer.parseInt(song[5]), this.currentlyPlayingIndex,
+            boolean isRepeat = this.mode == "repeat";
+            this.window.updateMiniplayer(true, true, isRepeat, 0, Integer.parseInt(song[5]), this.currentlyPlayingIndex,
                     this.queueList.size());
         } catch (Throwable t) {
         }
@@ -258,7 +261,8 @@ public class Player {
         int finalTime = Integer.parseInt(getCurrentlyPlayingSong()[5]);
 
         if (finalTime >= this.currentTime) {
-            this.window.updateMiniplayer(true, true, false, this.currentTime, finalTime, this.currentlyPlayingIndex,
+            boolean isRepeat = this.mode == "repeat";
+            this.window.updateMiniplayer(true, true, isRepeat, this.currentTime, finalTime, this.currentlyPlayingIndex,
                     this.queueList.size());
         } else {
             this.counter.requestStop();
